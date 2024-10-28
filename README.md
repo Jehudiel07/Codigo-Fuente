@@ -1,0 +1,269 @@
+# Codigo-Fuente
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Libreria de los sueños - Factura</title>
+    <!-- CSS Bootstrap-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+</head>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: whitesmoke;
+        margin: 0;
+        padding: 20px;
+    }
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: bisque;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h2, h3 {
+        color: black;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="number"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid beige;
+        border-radius: 4px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    table, th, td {
+        border: 1px solid bisque;
+    }
+    th, td {
+        padding: 10px;
+        text-align: left;
+    }
+    .total {
+        font-weight: bold;
+    }
+    .payment-options {
+        margin: 20px 0;
+    }
+    .submit-btn {
+        background-color: green;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .submit-btn:hover {
+        background-color: darkgreen;
+    }
+    .invoice {
+        display: none;
+        background-color: white;
+        border: 1px solid #ddd;
+        padding: 20px;
+        margin-top: 20px;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+<h2>Libreria de los sueños</h2>
+
+<!-- Formulario para ingresar artículos -->
+<h3>Ingresar Artículos Vendidos</h3>
+<form id="product-form">
+    <div class="form-group">
+        <label for="product-name">Nombre del artículo:</label>
+        <input type="text" id="product-name" name="product-name" required>
+    </div>
+    <div class="form-group">
+        <label for="product-quantity">Cantidad:</label>
+        <input type="number" id="product-quantity" name="product-quantity" min="1" required>
+    </div>
+    <div class="form-group">
+        <label for="product-price">Precio (por unidad):</label>
+        <input type="number" id="product-price" name="product-price" step="0.01" required>
+    </div>
+    <button type="button" class="submit-btn" onclick="addProduct()">Agregar Artículo</button>
+</form>
+
+<!-- Tabla de artículos -->
+<h3>Resumen de Venta</h3>
+<table id="product-table">
+    <thead>
+        <tr>
+            <th>Nombre del Artículo</th>
+            <th>Cantidad</th>
+            <th>Precio Unitario</th>
+            <th>Subtotal</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Los artículos aparecen aquí -->
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="3" class="total">Total</td>
+            <td class="total" id="total-amount">$0.00</td>
+        </tr>
+    </tfoot>
+</table>
+
+<!-- Opciones de Pago -->
+<h3>Opciones de Pago</h3>
+<div class="payment-options">
+    <!-- Pago con Tarjeta de Crédito -->
+    <div class="payment-option">
+        <h4>Pago con Tarjeta de Crédito/Débito</h4>
+        <div class="form-group">
+            <label for="card-name">Nombre en la tarjeta:</label>
+            <input type="text" id="card-name" name="card-name">
+        </div>
+        <div class="form-group">
+            <label for="card-number">Número de tarjeta:</label>
+            <input type="text" id="card-number" name="card-number">
+        </div>
+        <div class="form-group">
+            <label for="expiry-date">Fecha de vencimiento (MM/AA):</label>
+            <input type="text" id="expiry-date" name="expiry-date">
+        </div>
+        <div class="form-group">
+            <label for="cvv">Código de seguridad (CVV):</label>
+            <input type="number" id="cvv" name="cvv">
+        </div>
+    </div>
+
+    <!-- Pago en Efectivo -->
+    <div class="payment-option">
+        <h4>Pago en Efectivo</h4>
+        <div class="form-group">
+            <label for="cash-received">Cantidad recibida:</label>
+            <input type="number" id="cash-received" name="cash-received" step="0.01" min="0" oninput="calculateChange()">
+        </div>
+        <div class="form-group">
+            <label for="change">Cambio a devolver:</label>
+            <input type="text" id="change" name="change" readonly value="$0.00">
+        </div>
+    </div>
+</div>
+
+<!-- Botón de Confirmación -->
+<button class="submit-btn" onclick="confirmPayment()">Confirmar Pago</button>
+
+<!-- Factura -->
+<div id="invoice" class="invoice">
+    <h3>Factura - Librería de los Sueños</h3>
+    <p><strong>Fecha:</strong> <span id="invoice-date"></span></p>
+    <h4>Detalle de Productos</h4>
+    <table id="invoice-table">
+        <thead>
+            <tr>
+                <th>Nombre del Artículo</th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Detalle de la factura aquí -->
+        </tbody>
+    </table>
+    <p class="total"><strong>Total a Pagar:</strong> <span id="invoice-total"></span></p>
+    <p id="invoice-change" style="display:none;"><strong>Cambio:</strong> <span id="invoice-change-amount"></span></p>
+    <button class="submit-btn" onclick="printInvoice()">Imprimir Factura</button>
+</div>
+
+</div>
+
+<script>
+let totalAmount = 0;
+let products = [];
+
+function addProduct() {
+    const name = document.getElementById('product-name').value;
+    const quantity = parseInt(document.getElementById('product-quantity').value);
+    const price = parseFloat(document.getElementById('product-price').value);
+    const subtotal = (quantity * price).toFixed(2);
+
+    // Guardar producto en la lista de productos
+    products.push({ name, quantity, price, subtotal });
+
+    // Añadir el producto a la tabla de resumen
+    const table = document.getElementById('product-table').getElementsByTagName('tbody')[0];
+    const newRow = table.insertRow();
+    newRow.innerHTML = `<td>${name}</td><td>${quantity}</td><td>$${price.toFixed(2)}</td><td>$${subtotal}</td>`;
+
+    totalAmount += parseFloat(subtotal);
+    document.getElementById('total-amount').textContent = `$${totalAmount.toFixed(2)}`;
+
+    document.getElementById('product-form').reset();
+}
+
+function calculateChange() {
+    const cashReceived = parseFloat(document.getElementById('cash-received').value);
+    const total = totalAmount;
+    
+    if (cashReceived >= total) {
+        const change = (cashReceived - total).toFixed(2);
+        document.getElementById('change').value = `$${change}`;
+        document.getElementById('invoice-change-amount').textContent = `$${change}`;
+    } else {
+        document.getElementById('change').value = "$0.00";
+        document.getElementById('invoice-change-amount').textContent = "$0.00";
+    }
+}
+
+function confirmPayment() {
+    document.getElementById('invoice').style.display = 'block';
+
+    const invoiceDate = new Date().toLocaleDateString();
+    document.getElementById('invoice-date').textContent = invoiceDate;
+
+    const invoiceTable = document.getElementById('invoice-table').getElementsByTagName('tbody')[0];
+    invoiceTable.innerHTML = '';
+
+    products.forEach(product => {
+        const row = invoiceTable.insertRow();
+        row.innerHTML = `<td>${product.name}</td><td>${product.quantity}</td><td>$${product.price.toFixed(2)}</td><td>$${product.subtotal}</td>`;
+    });
+
+    document.getElementById('invoice-total').textContent = `$${totalAmount.toFixed(2)}`;
+
+    const cashReceived = parseFloat(document.getElementById('cash-received').value);
+    if (cashReceived >= totalAmount) {
+        document.getElementById('invoice-change').style.display = 'block';
+    } else {
+        document.getElementById('invoice-change').style.display = 'none';
+    }
+
+    alert('Pago confirmado. Total: ' + document.getElementById('total-amount').textContent);
+}
+
+function printInvoice() {
+    const invoiceContent = document.getElementById('invoice').innerHTML;
+    const originalContent = document.body.innerHTML;
+
+    document.body.innerHTML = invoiceContent;
+    window.print();
+    document.body.innerHTML = originalContent;
+    location.reload();
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>
